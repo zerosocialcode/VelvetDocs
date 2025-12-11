@@ -5,7 +5,7 @@ Detects markdown-like structures and converts to structured format
 
 import re
 
-def parse_text(text):
+def parse_text(text, uploaded_images=None):
     """
     Parse input text and detect markdown-like patterns
     
@@ -17,9 +17,13 @@ def parse_text(text):
     - *italic text*
     - - list item
     - > blockquote
+    - [IMG:n:alignment] where n is image number (0-based) and alignment is left/center/right
     
     Returns: List of dictionaries with type and content
     """
+    if uploaded_images is None:
+        uploaded_images = []
+    
     lines = text.split('\n')
     parsed = []
     in_list = False
@@ -35,6 +39,25 @@ def parse_text(text):
                 list_items = []
                 in_list = False
             parsed.append({'type': 'space', 'content': ''})
+            continue
+        
+        # Image placeholder: [IMG:0:center] or [IMG:1:left] etc.
+        img_match = re.match(r'\[IMG:(\d+)(?::(\w+))?\]', line.strip())
+        if img_match:
+            if in_list:
+                parsed.append({'type': 'list', 'items': list_items})
+                list_items = []
+                in_list = False
+            
+            img_index = int(img_match.group(1))
+            img_alignment = img_match.group(2) if img_match.group(2) else 'center'
+            
+            if img_index < len(uploaded_images):
+                parsed.append({
+                    'type': 'image',
+                    'path': uploaded_images[img_index],
+                    'alignment': img_alignment
+                })
             continue
         
         # Heading 1: # Text
@@ -81,7 +104,6 @@ def parse_text(text):
                 parsed.append({'type': 'list', 'items': list_items})
                 list_items = []
                 in_list = False
-            # Parse inline formatting (bold, italic)
             parsed.append({'type': 'paragraph', 'content': line})
     
     # Close any remaining list

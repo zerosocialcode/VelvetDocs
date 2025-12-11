@@ -1,15 +1,17 @@
 """
 PDF Generator Module
-Creates PDFs using ReportLab with theme support
+Creates PDFs using ReportLab with theme support and image handling
 """
 
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT, TA_CENTER
+from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT, TA_CENTER, TA_RIGHT
 from reportlab.pdfgen import canvas
 from datetime import datetime
+from PIL import Image as PILImage
+import os
 
 # Import all themes
 from themes.academic import AcademicTheme
@@ -30,7 +32,15 @@ THEME_CLASSES = {
     'softpastel': SoftPastelTheme
 }
 
-def generate_pdf(parsed_content, theme_name, output_path):
+# Alignment mapping
+ALIGNMENT_MAP = {
+    'left': TA_LEFT,
+    'center': TA_CENTER,
+    'right': TA_RIGHT,
+    'justify': TA_JUSTIFY
+}
+
+def generate_pdf(parsed_content, theme_name, output_path, text_alignment='left'):
     """
     Generate PDF from parsed content using specified theme
     
@@ -38,6 +48,7 @@ def generate_pdf(parsed_content, theme_name, output_path):
         parsed_content: List of parsed text elements
         theme_name: Name of theme to apply
         output_path: Path where PDF will be saved
+        text_alignment: Global text alignment (left/center/right/justify)
     """
     # Get theme class
     theme_class = THEME_CLASSES.get(theme_name, AcademicTheme)
@@ -58,6 +69,10 @@ def generate_pdf(parsed_content, theme_name, output_path):
     
     # Get styles from theme
     styles = theme.get_styles()
+    
+    # Apply global alignment to body text if specified
+    if text_alignment in ALIGNMENT_MAP:
+        styles['BodyText'].alignment = ALIGNMENT_MAP[text_alignment]
     
     # Process each parsed element
     for element in parsed_content:
@@ -96,6 +111,58 @@ def generate_pdf(parsed_content, theme_name, output_path):
                 para = Paragraph(formatted_text, styles['List'])
                 story.append(para)
             story.append(Spacer(1, 0.15 * inch))
+        
+        elif elem_type == 'image':
+            # Handle image insertion
+            img_path = element['path']
+            img_alignment = element.get('alignment', 'center')
+            
+            if os.path.exists(img_path):
+                try:
+                    # Get image dimensions
+                    pil_img = PILImage.open(img_path)
+                    img_width, img_height = pil_img.size
+                    
+                    # Calculate scaled dimensions (max width: 6 inches)
+                    max_width = 6 * inch
+                    max_height = 7 * inch
+                    
+                    aspect_ratio = img_width / img_height
+                    
+                    if img_width > max_width:
+                        scaled_width = max_width
+                        scaled_height = max_width / aspect_ratio
+                    else:
+                        scaled_width = img_width * (inch / 96)  # Assuming 96 DPI
+                        scaled_height = img_height * (inch / 96)
+                    
+                    # Ensure height doesn't exceed max
+                    if scaled_height > max_height:
+                        scaled_height = max_height
+                        scaled_width = max_height * aspect_ratio
+                    
+                    # Create image object
+                    img = Image(img_path, width=scaled_width, height=scaled_height)
+                    
+                    # Apply alignment
+                    if img_alignment == 'center':
+                        img.hAlign = 'CENTER'
+                    elif img_alignment == 'right':
+                        img.hAlign = 'RIGHT'
+                    else:
+                        img.hAlign = 'LEFT'
+                    
+                    story.append(img)
+                    story.append(Spacer(1, 0.2 * inch))
+                    
+                except Exception as e:
+                    # If image fails, add error message
+                    error_para = Paragraph(
+                        f"<i>[Image could not be loaded: {os.path.basename(img_path)}]</i>",
+                        styles['BodyText']
+                    )
+                    story.append(error_para)
+                    story.append(Spacer(1, 0.15 * inch))
         
         elif elem_type == 'space':
             story.append(Spacer(1, 0.1 * inch))
