@@ -71,6 +71,98 @@
         box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
     }
     
+    .image-upload-section {
+        background: #f8fafc;
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 2px dashed #cbd5e1;
+        margin-bottom: 1.5rem;
+    }
+    
+    .image-upload-section:hover {
+        border-color: var(--primary-color);
+        background: #f1f5f9;
+    }
+    
+    .image-preview {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .image-preview-item {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 2px solid #e5e7eb;
+    }
+    
+    .image-preview-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .image-preview-item .remove-btn {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: rgba(239, 68, 68, 0.9);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+    }
+    
+    .image-preview-item .image-number {
+        position: absolute;
+        bottom: 5px;
+        left: 5px;
+        background: rgba(99, 102, 241, 0.9);
+        color: white;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .alignment-selector {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    
+    .alignment-btn {
+        flex: 1;
+        padding: 0.75rem;
+        border: 2px solid #e5e7eb;
+        background: white;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: 500;
+    }
+    
+    .alignment-btn:hover {
+        border-color: var(--primary-color);
+        background: #f8fafc;
+    }
+    
+    .alignment-btn.active {
+        border-color: var(--primary-color);
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+        color: var(--primary-color);
+    }
+    
     .alert {
         border-radius: 12px;
         border: none;
@@ -81,6 +173,12 @@
         height: 1rem;
         border-width: 2px;
     }
+    
+    .upload-icon {
+        font-size: 3rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
 </style>
 {% endblock %}
 
@@ -88,13 +186,13 @@
 <!-- Hero Section -->
 <div class="hero-section">
     <h1>✨ Create Beautiful PDFs in Seconds</h1>
-    <p>Paste your text, choose a theme, and generate stunning documents</p>
+    <p>Paste your text, add images, choose a theme, and generate stunning documents</p>
 </div>
 
 <!-- Main Card -->
 <div class="card">
     <div class="card-body p-4">
-        <form id="pdfForm">
+        <form id="pdfForm" enctype="multipart/form-data">
             <!-- Theme Selection -->
             <div class="theme-selector">
                 <h4 class="mb-3">Choose Your Theme</h4>
@@ -125,12 +223,64 @@
                 </div>
             </div>
 
+            <!-- Image Upload Section -->
+            <div class="image-upload-section">
+                <div class="text-center">
+                    <div class="upload-icon">📷</div>
+                    <h5 class="mb-2">Add Images to Your PDF</h5>
+                    <p class="text-muted mb-3">Upload images and place them in your document using [IMG:0:center]</p>
+                    <input type="file" id="imageInput" name="images" multiple accept="image/*" class="d-none">
+                    <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('imageInput').click()">
+                        Choose Images
+                    </button>
+                </div>
+                <div id="imagePreview" class="image-preview"></div>
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <strong>How to use:</strong> Upload images, note their numbers (0, 1, 2...), then use [IMG:0:center] in your text to place image #0 with center alignment. 
+                        Alignments: left, center, right
+                    </small>
+                </div>
+            </div>
+
+            <!-- Text Alignment Selection -->
+            <div class="mb-4">
+                <h5 class="mb-2">Text Alignment</h5>
+                <div class="alignment-selector">
+                    <button type="button" class="alignment-btn active" data-alignment="left">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" style="vertical-align: middle; margin-right: 4px;">
+                            <path d="M15 15H3v2h12v-2zm0-8H3v2h12V7zM3 13h18v-2H3v2zm0 8h18v-2H3v2zM3 3v2h18V3H3z"/>
+                        </svg>
+                        Left
+                    </button>
+                    <button type="button" class="alignment-btn" data-alignment="center">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" style="vertical-align: middle; margin-right: 4px;">
+                            <path d="M7 15v2h10v-2H7zm-4 6h18v-2H3v2zm0-8h18v-2H3v2zm4-6v2h10V7H7zM3 3v2h18V3H3z"/>
+                        </svg>
+                        Center
+                    </button>
+                    <button type="button" class="alignment-btn" data-alignment="right">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" style="vertical-align: middle; margin-right: 4px;">
+                            <path d="M3 21h18v-2H3v2zm6-4h12v-2H9v2zm-6-4h18v-2H3v2zm6-4h12V7H9v2zM3 3v2h18V3H3z"/>
+                        </svg>
+                        Right
+                    </button>
+                    <button type="button" class="alignment-btn" data-alignment="justify">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" style="vertical-align: middle; margin-right: 4px;">
+                            <path d="M3 21h18v-2H3v2zm0-4h18v-2H3v2zm0-4h18v-2H3v2zm0-4h18V7H3v2zm0-6v2h18V3H3z"/>
+                        </svg>
+                        Justify
+                    </button>
+                </div>
+                <input type="hidden" name="alignment" id="alignmentInput" value="left">
+            </div>
+
             <!-- Text Input -->
             <div class="mb-4">
                 <label for="contentArea" class="form-label">
                     <h4 class="mb-2">Your Content</h4>
                     <small class="text-muted">
-                        Supports markdown-style formatting: # for headings, **bold**, *italic*, - for lists, > for quotes
+                        Supports markdown-style formatting: # for headings, **bold**, *italic*, - for lists, > for quotes, [IMG:n:alignment] for images
                     </small>
                 </label>
                 <textarea 
@@ -142,12 +292,16 @@
 ## Introduction
 This is a **sample** document with *various* formatting options.
 
+[IMG:0:center]
+
 ## Key Points
 - First important point
 - Second important point
 - Third important point
 
 > This is a blockquote with important information.
+
+[IMG:1:left]
 
 ## Conclusion
 Your content will be beautifully formatted in the selected theme!"
@@ -193,6 +347,14 @@ Your content will be beautifully formatted in the selected theme!"
                 <p><strong>Blockquotes:</strong></p>
                 <code>> Important quote</code>
             </div>
+            <div class="col-md-6 mt-3">
+                <p><strong>Images:</strong></p>
+                <code>[IMG:0:center]<br>[IMG:1:left]<br>[IMG:2:right]</code>
+            </div>
+            <div class="col-md-6 mt-3">
+                <p><strong>Image Numbers:</strong></p>
+                <code>First uploaded = 0<br>Second uploaded = 1<br>Third uploaded = 2</code>
+            </div>
         </div>
     </div>
 </div>
@@ -200,6 +362,8 @@ Your content will be beautifully formatted in the selected theme!"
 
 {% block extra_js %}
 <script>
+let selectedFiles = [];
+
 // Theme selection interaction
 document.querySelectorAll('.theme-card').forEach(card => {
     card.addEventListener('click', function() {
@@ -212,11 +376,68 @@ document.querySelectorAll('.theme-card').forEach(card => {
 // Initialize first theme as selected
 document.querySelector('.theme-card').classList.add('selected');
 
+// Alignment button interaction
+document.querySelectorAll('.alignment-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.alignment-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        document.getElementById('alignmentInput').value = this.dataset.alignment;
+    });
+});
+
+// Image upload handling
+document.getElementById('imageInput').addEventListener('change', function(e) {
+    const files = Array.from(e.target.files);
+    selectedFiles = selectedFiles.concat(files);
+    updateImagePreview();
+});
+
+function updateImagePreview() {
+    const preview = document.getElementById('imagePreview');
+    preview.innerHTML = '';
+    
+    selectedFiles.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const div = document.createElement('div');
+            div.className = 'image-preview-item';
+            div.innerHTML = `
+                <img src="${e.target.result}" alt="Preview">
+                <button type="button" class="remove-btn" onclick="removeImage(${index})">×</button>
+                <div class="image-number">${index}</div>
+            `;
+            preview.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function removeImage(index) {
+    selectedFiles.splice(index, 1);
+    updateImagePreview();
+}
+
 // Form submission
 document.getElementById('pdfForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    const formData = new FormData(this);
+    const formData = new FormData();
+    
+    // Add text content
+    formData.append('content', document.getElementById('contentArea').value);
+    
+    // Add theme
+    const selectedTheme = document.querySelector('input[name="theme"]:checked');
+    formData.append('theme', selectedTheme.value);
+    
+    // Add alignment
+    formData.append('alignment', document.getElementById('alignmentInput').value);
+    
+    // Add images
+    selectedFiles.forEach(file => {
+        formData.append('images', file);
+    });
+    
     const generateBtn = document.getElementById('generateBtn');
     const btnText = document.getElementById('btnText');
     const btnSpinner = document.getElementById('btnSpinner');
