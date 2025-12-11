@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block title %}VelvetDocs - Create Beautiful PDFs{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        text-align: center;
+        padding: 2rem 0;
+        color: white;
+    }
+    
+    .hero-section h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+    
+    .hero-section p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+    }
+    
+    .theme-selector {
+        margin-bottom: 2rem;
+    }
+    
+    .theme-card {
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        height: 100%;
+    }
+    
+    .theme-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+    
+    .theme-card.selected {
+        border-color: var(--primary-color);
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+    }
+    
+    .theme-card input[type="radio"] {
+        display: none;
+    }
+    
+    .theme-name {
+        font-weight: 600;
+        color: var(--dark-color);
+        margin-bottom: 0.5rem;
+    }
+    
+    .theme-description {
+        font-size: 0.9rem;
+        color: #6b7280;
+    }
+    
+    #contentArea {
+        min-height: 400px;
+        font-family: 'Courier New', monospace;
+        border-radius: 8px;
+        border: 2px solid #e5e7eb;
+    }
+    
+    #contentArea:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    
+    .alert {
+        border-radius: 12px;
+        border: none;
+    }
+    
+    .spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+        border-width: 2px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <h1>✨ Create Beautiful PDFs in Seconds</h1>
+    <p>Paste your text, choose a theme, and generate stunning documents</p>
+</div>
+
+<!-- Main Card -->
+<div class="card">
+    <div class="card-body p-4">
+        <form id="pdfForm">
+            <!-- Theme Selection -->
+            <div class="theme-selector">
+                <h4 class="mb-3">Choose Your Theme</h4>
+                <div class="row g-3">
+                    {% for key, name in themes.items() %}
+                    <div class="col-md-4">
+                        <label class="theme-card" for="theme-{{ key }}">
+                            <input type="radio" name="theme" id="theme-{{ key }}" value="{{ key }}" {% if loop.first %}checked{% endif %}>
+                            <div class="theme-name">{{ name }}</div>
+                            <div class="theme-description">
+                                {% if key == 'academic' %}
+                                    Traditional serif fonts, perfect for academic papers
+                                {% elif key == 'research_pro' %}
+                                    Professional research style with structured layout
+                                {% elif key == 'modern_colorblock' %}
+                                    Bold vibrant colors with contemporary design
+                                {% elif key == 'elegant_dark' %}
+                                    Sophisticated dark theme with gold accents
+                                {% elif key == 'corporate_blue' %}
+                                    Professional business document style
+                                {% elif key == 'softpastel' %}
+                                    Clean minimal design with soft colors
+                                {% endif %}
+                            </div>
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Text Input -->
+            <div class="mb-4">
+                <label for="contentArea" class="form-label">
+                    <h4 class="mb-2">Your Content</h4>
+                    <small class="text-muted">
+                        Supports markdown-style formatting: # for headings, **bold**, *italic*, - for lists, > for quotes
+                    </small>
+                </label>
+                <textarea 
+                    class="form-control" 
+                    id="contentArea" 
+                    name="content" 
+                    placeholder="# My Document Title
+
+## Introduction
+This is a **sample** document with *various* formatting options.
+
+## Key Points
+- First important point
+- Second important point
+- Third important point
+
+> This is a blockquote with important information.
+
+## Conclusion
+Your content will be beautifully formatted in the selected theme!"
+                    required
+                ></textarea>
+            </div>
+
+            <!-- Alert Area -->
+            <div id="alertArea"></div>
+
+            <!-- Submit Button -->
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary btn-lg" id="generateBtn">
+                    <span id="btnText">Generate PDF</span>
+                    <span id="btnSpinner" class="d-none">
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        Generating...
+                    </span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Example Section -->
+<div class="card mt-4">
+    <div class="card-body">
+        <h5>📝 Formatting Guide</h5>
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <p><strong>Headings:</strong></p>
+                <code># Heading 1<br>## Heading 2<br>### Heading 3</code>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Text Formatting:</strong></p>
+                <code>**bold text**<br>*italic text*</code>
+            </div>
+            <div class="col-md-6 mt-3">
+                <p><strong>Lists:</strong></p>
+                <code>- List item 1<br>- List item 2</code>
+            </div>
+            <div class="col-md-6 mt-3">
+                <p><strong>Blockquotes:</strong></p>
+                <code>> Important quote</code>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Theme selection interaction
+document.querySelectorAll('.theme-card').forEach(card => {
+    card.addEventListener('click', function() {
+        document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('selected'));
+        this.classList.add('selected');
+        this.querySelector('input[type="radio"]').checked = true;
+    });
+});
+
+// Initialize first theme as selected
+document.querySelector('.theme-card').classList.add('selected');
+
+// Form submission
+document.getElementById('pdfForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const generateBtn = document.getElementById('generateBtn');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+    const alertArea = document.getElementById('alertArea');
+    
+    // Show loading state
+    generateBtn.disabled = true;
+    btnText.classList.add('d-none');
+    btnSpinner.classList.remove('d-none');
+    alertArea.innerHTML = '';
+    
+    try {
+        const response = await fetch('/generate', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            // Show success message
+            alertArea.innerHTML = `
+                <div class="alert alert-success">
+                    <strong>Success!</strong> Your PDF has been generated.
+                    <a href="/download/${data.filename}" class="alert-link ms-2">Download Now</a>
+                    <span class="mx-2">|</span>
+                    <a href="/preview/${data.filename}" class="alert-link">Preview</a>
+                </div>
+            `;
+            
+            // Auto download
+            setTimeout(() => {
+                window.location.href = `/download/${data.filename}`;
+            }, 500);
+        } else {
+            throw new Error(data.error || 'Failed to generate PDF');
+        }
+    } catch (error) {
+        alertArea.innerHTML = `
+            <div class="alert alert-danger">
+                <strong>Error!</strong> ${error.message}
+            </div>
+        `;
+    } finally {
+        // Reset button state
+        generateBtn.disabled = false;
+        btnText.classList.remove('d-none');
+        btnSpinner.classList.add('d-none');
+    }
+});
+</script>
+{% endblock %}

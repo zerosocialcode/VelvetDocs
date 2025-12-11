@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}PDF Preview - VelvetDocs{% endblock %}
+
+{% block extra_css %}
+<style>
+    .preview-container {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+    
+    .pdf-viewer {
+        width: 100%;
+        height: 800px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+    
+    .btn-outline-primary {
+        border: 2px solid var(--primary-color);
+        color: var(--primary-color);
+        font-weight: 600;
+        padding: 10px 28px;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    
+    .btn-outline-primary:hover {
+        background: var(--primary-color);
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .success-icon {
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        animation: scaleIn 0.5s ease-out;
+    }
+    
+    @keyframes scaleIn {
+        from {
+            transform: scale(0);
+        }
+        to {
+            transform: scale(1);
+        }
+    }
+    
+    .hero-text {
+        color: white;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .hero-text h1 {
+        font-size: 2rem;
+        font-weight: 700;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero-text">
+    <div class="success-icon">
+        <svg width="32" height="32" fill="white" viewBox="0 0 24 24">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+        </svg>
+    </div>
+    <h1>Your PDF is Ready! 🎉</h1>
+    <p>Preview your document below or download it to your device</p>
+</div>
+
+<div class="preview-container">
+    <div class="text-center mb-4">
+        <h4>PDF Preview</h4>
+        <p class="text-muted">{{ filename }}</p>
+    </div>
+    
+    <!-- PDF Viewer -->
+    <iframe 
+        src="/download/{{ filename }}" 
+        class="pdf-viewer"
+        type="application/pdf"
+    ></iframe>
+    
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <a href="/download/{{ filename }}" class="btn btn-primary" download>
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" style="margin-right: 8px;">
+                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+            </svg>
+            Download PDF
+        </a>
+        <a href="/" class="btn btn-outline-primary">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" style="margin-right: 8px;">
+                <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
+            </svg>
+            Create Another PDF
+        </a>
+    </div>
+</div>
+
+<!-- Tips Section -->
+<div class="card mt-4">
+    <div class="card-body">
+        <h5>💡 Pro Tips</h5>
+        <ul class="mb-0">
+            <li>Try different themes to find the perfect style for your document</li>
+            <li>Use headings to structure your content effectively</li>
+            <li>Blockquotes are great for highlighting important information</li>
+            <li>Combine bold and italic for emphasis where needed</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Smooth scroll to preview
+window.addEventListener('load', function() {
+    document.querySelector('.preview-container').scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center' 
+    });
+});
+</script>
+{% endblock %}
