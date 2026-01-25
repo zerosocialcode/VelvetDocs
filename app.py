@@ -101,7 +101,9 @@ def download(filename):
     try:
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         if os.path.exists(filepath):
-            return send_file(filepath, as_attachment=True, download_name=filename)
+            # Check if we should display inline (preview) or download (attachment)
+            inline = request.args.get('inline', 'false').lower() == 'true'
+            return send_file(filepath, as_attachment=not inline, download_name=filename)
         else:
             return "File not found", 404
     except Exception as e:

@@ -468,10 +468,7 @@ document.getElementById('pdfForm').addEventListener('submit', async function(e) 
                 </div>
             `;
             
-            // Auto download
-            setTimeout(() => {
-                window.location.href = `/download/${data.filename}`;
-            }, 500);
+            // Auto download REMOVED here to allow user to choose
         } else {
             throw new Error(data.error || 'Failed to generate PDF');
         }
